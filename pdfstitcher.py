@@ -21,6 +21,7 @@ import wx.lib.scrolledpanel as scrolled
 from tile_pages import PageTiler
 from layerfilter import LayerFilter
 from pagefilter import PageFilter
+from previewwindow import PreviewWindow
 import os
 import sys
 import pikepdf
@@ -158,6 +159,11 @@ class TileTab(scrolled.ScrolledPanel):
         self.page_range_txt.SetToolTip(wx.ToolTip(_('Pages assemble in specified order. 0 inserts a blank page.')))
         self.page_range_txt.Bind(wx.EVT_TEXT, main_gui.page_range_updated)
         newline.Add(self.page_range_txt,proportion=1,flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=5)
+
+        # layout assistant
+        self.show_preview_btn = wx.Button(self, label=_('Layout Assistant'))
+        self.show_preview_btn.Bind(wx.EVT_BUTTON,main_gui.on_show_preview)
+        newline.Add(self.show_preview_btn,flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT,border=5)
         vert_sizer.Add(newline,flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT,border=10)
 
         ## OPTIONAL PARAMETERS
@@ -504,6 +510,7 @@ class SewGUI(wx.Frame):
         self.out_doc_path = None
         self.tiler = None
         self.layer_filter = None
+        self.pw = None
 
         self.working_dir = os.getcwd()
         self.make_menu_bar()
@@ -514,6 +521,26 @@ class SewGUI(wx.Frame):
         elif event.GetId() == self.tt.page_range_txt.GetId():
             self.io.page_range_txt.ChangeValue(self.tt.page_range_txt.GetValue())
 
+    def on_show_preview(self,event):
+        if not self.pw:
+            self.pw = PreviewWindow(self, title = _('Preview Window'), size = (400,600))
+        
+        self.update_preview_window()
+        
+        if not self.pw.IsShown():
+            self.pw.Show()
+    
+    def update_preview_window(self):
+        self.pw.col_major = bool(self.tt.col_row_order_combo.GetSelection())
+        self.pw.right_to_left = bool(self.tt.left_right_combo.GetSelection())
+        self.pw.bottom_to_top = bool(self.tt.top_bottom_combo.GetSelection())
+        self.pw.page_range = utils.parse_page_range(self.io.page_range_txt.GetValue())
+
+        cols = self.tt.columns_txt.GetValue().strip()
+        self.pw.cols = int(cols) if cols else 0
+        rows = self.tt.rows_txt.GetValue().strip()
+        self.pw.rows = int(rows) if rows else 0
+        
     def on_go_pressed(self,event):
         # retrieve the selected options
         do_tile = bool(self.io.do_tile.GetValue())
