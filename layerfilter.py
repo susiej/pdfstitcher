@@ -247,10 +247,13 @@ class LayerFilter():
                                 if op in ['Q', 'gs']:
                                     self.append_layer_properties(commands)
                                 elif op == 'd':
+                                    commands.pop()
                                     self.append_layer_property('style', commands)
                                 elif op in color_stroke_ops:
+                                    commands.pop()
                                     self.append_layer_property('rgb', commands)
                                 elif op == 'w': # and operands[0] != 0:
+                                    commands.pop()
                                     self.append_layer_property('thickness', commands)
                             newstream = pikepdf.unparse_content_stream(commands)
                             ob.write(newstream)
@@ -302,10 +305,13 @@ class LayerFilter():
                                 if op in ['Q', 'gs']:
                                     self.append_layer_properties(commands)
                                 elif op == 'd':
+                                    commands.pop()
                                     self.append_layer_property('style', commands)
                                 elif op in color_stroke_ops:
+                                    commands.pop()
                                     self.append_layer_property('rgb', commands)
                                 elif op == 'w': # and operands[0] != 0:
+                                    commands.pop()
                                     self.append_layer_property('thickness', commands)
                             previous_operator = operator
                             #if(in_oc):
@@ -320,16 +326,16 @@ class LayerFilter():
                     ob.write(newstream)
 
             except AttributeError:
-                traceback.print_exc()
+                #traceback.print_exc()
                 ignore = 1
             except ValueError:
-                traceback.print_exc()
+                #traceback.print_exc()
                 ignore = 1
             except NameError:
-                traceback.print_exc()
+                #traceback.print_exc()
                 ignore = 1
             except:
-                traceback.print_exc()
+                #traceback.print_exc()
                 #print("couldn't open stream ", sys.exc_info()[0] )
                 #print("couldn't open stream")
                 #ignore - probably not a content stream. Print an error when debugging
