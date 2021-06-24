@@ -128,6 +128,8 @@ class LayerFilter():
                 self.get_properties(output.pages[p-1])
                 if self.properties:
                     self.remove_ocgs_from_stream(output.pages[p-1])
+                elif not self.keep_non_oc:
+                    output.pages[p-1].Contents = []
                 progress_update and progress_update(page_range.index(p))
                 if progress_was_cancelled and progress_was_cancelled():
                     return None
@@ -193,6 +195,11 @@ class LayerFilter():
         # skip over anything we have already seen
         if not isinstance(ob, pikepdf.Object):
             return
+        
+        # skip over fonts
+        if '/Type' in ob.keys():
+            if ob.Type == '/Font' or ob.Type=='/FontDescriptor':
+                return
 
         obid = ob.unparse()
         if obid in self.found_objects:
@@ -266,6 +273,10 @@ class LayerFilter():
                         stream_has_layers = True
                         break
 
+                if not stream_has_layers and not self.in_oc and not self.keep_non_oc:
+                    empty = pikepdf.unparse_content_stream([])
+                    ob.write(empty)
+
                 if stream_has_layers or self.in_oc:
                     previous_operator = ''
                     for operands, operator in pikepdf.parse_content_stream(ob):
@@ -284,6 +295,10 @@ class LayerFilter():
                                     else:
                                         self.append_layer_properties(commands)
                             #print([oc, self.current_layer_name, self.keeping])
+
+                        #if not self.in_oc and not self.keep_non_oc:
+                            #print(f"Op {operator}, operands {operands}")
+                            #continue # we don't want to keep non oc lines when they have selected not to
                                 
                         if self.keeping or not self.in_oc or op in keep_operators:
                             if previous_operator == 'q' and operator == 'Q':
